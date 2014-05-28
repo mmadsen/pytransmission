@@ -1,5 +1,5 @@
 # !/usr/bin/env python
-# Copyright (c) 2013.  Mark E. Madsen <mark@madsenlab.org>
+# Copyright (c) 2013.  Mark E. Madsen <mark@pytransmission.org>
 #
 # This work is licensed under the terms of the Apache Software License, Version 2.0.  See the file LICENSE for details.
 
@@ -13,7 +13,7 @@ import math
 import logging as log
 
 
-def expectedIAQuasiStationarityTimeHaploid(popsize,mutationrate):
+def wfia_convergence_to_stationarity_generations(popsize,mutationrate):
     """Returns the expected time in generations for an infinite-alleles WF process to reach quasi-stationarity, as defined
         by Ewens (2004) for the "unlableled" WF-IA model.
 

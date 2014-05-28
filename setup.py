@@ -2,11 +2,11 @@ from distutils.core import setup
 
 setup(name="pytransmission",
       version="1.0",
-      packages=['madsenlab',
-                'madsenlab.common',
+      packages=['pytransmission',
+                'pytransmission.popgen',
 ],
       author='Mark E. Madsen',
-      author_email='mark@madsenlab.org',
+      author_email='mark@pytransmission.org',
       url='https://github.com/mmadsen/pytransmission',
       classifiers=[
           'Development Status :: 3 - Alpha',
