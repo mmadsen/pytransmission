@@ -9,6 +9,8 @@ Description here
 """
 
 import logging as log
+from collections import defaultdict, Counter
+from copy import deepcopy
 
 
 class MoranTimeAverager(object):
@@ -28,43 +30,63 @@ class MoranTimeAverager(object):
 
     """
 
-    def __init__(self, indextime, interval_list, popsize, ending_interval=True):
+    def __init__(self, indextime, interval_list, popsize, numloci, ending_interval=True):
         """
 
         :param indextime: The simulation tick which is either the starting or ending time for the "stack" of TA intervals
         :param interval_list: A list of TA durations, given in "generations"
         :param popsize: Population size of agents, used to turn generations into clock ticks in a Moran model
+        :param numloci: Number of dimensions or loci for which we're counting traits
         :param ending_interval: Boolean, indicates whether this TA interval stack is at the beginning of a survival analysis or the end.  A set of intervals not used for a dual-sample analysis should give "True" or let this default.
         :return: void
 
         """
         self.intervals_by_tick = [t * popsize for t in interval_list]
+        self.int_tick_to_gen = dict(zip(self.intervals_by_tick, interval_list))
+        self.int_gen_to_tick = dict(zip(interval_list, self.intervals_by_tick))
         self.interval_tuples = []
         self.earliest_tick = 0
         self.latest_tick = 0
+        self.interval_tuple_map = dict()
+        self.counts_by_interval_by_locus = dict()
+        #log.debug("map intervals: %s", self.int_tick_to_gen)
+
+        # initialize the count maps.  We use the Counter class because we can update an entire locus of counts
+        # with one addition operation.  Otherwise, the intervals and loci are dicts
+        for interval in self.intervals_by_tick:
+            self.counts_by_interval_by_locus[interval] = defaultdict(Counter)
+            for locus in range(0,numloci):
+                self.counts_by_interval_by_locus[interval][locus] = Counter()
+
+        #log.debug("initialized count map: %s", self.counts_by_interval_by_locus)
 
         if ending_interval == True:
             # So we start at the indextime, and form intervals by adding each TA duration (in ticks) to it
             start = indextime
-            end_list = [t + start for t in self.intervals_by_tick]
-            for end in end_list:
-                self.interval_tuples.append((start, end))
+            for interval in self.intervals_by_tick:
+                tup = (start, interval + start)
+                self.interval_tuple_map[interval] = tup
+                self.interval_tuples.append(tup)
 
+            end_list = [t + start for t in self.intervals_by_tick]
             self.earliest_tick = indextime
             self.latest_tick = max(end_list)
 
         else:
             # So we start at the indextime, and form intervals by SUBTRACTING each TA duration from it
             end = indextime
+            for interval in self.intervals_by_tick:
+                tup = (end - interval, end)
+                self.interval_tuple_map[interval] = tup
+                self.interval_tuples.append(tup)
+
+
             start_list = [end - t for t in self.intervals_by_tick]
-
-            for start in start_list:
-                self.interval_tuples.append((start,end))
-
             self.earliest_tick = min(start_list)
             self.latest_tick = indextime
 
-        log.debug("intervals as tuples: %s", self.interval_tuples)
+        #log.debug("intervals as tuples: %s", self.interval_tuples)
+        #log.debug("interval tuple map: %s", self.interval_tuple_map)
 
 
     def get_interval_tuples(self):
@@ -77,8 +99,64 @@ class MoranTimeAverager(object):
         return self.latest_tick
 
     def is_within_intervals(self, timestep):
+        """
+        Returns True if the timestep is within the largest of the duration intervals being tracked.
+
+        :param timestep:
+        :return: Boolean
+        """
         return self.earliest_tick <= timestep <= self.latest_tick
 
 
-    def record_sample(self,pop):
-        pass
+    def _is_within_tuple(self,tup,timestep):
+        return tup[0] <= timestep <= tup[1]
+
+
+
+    def record_trait_count_sample(self,timestep,countmap):
+        """
+        Given a time step, and a map of trait counts by locus, we iterate over the
+        intervals for which we're accumulating samples.  If the timestep fits within a given
+        time interval, the counts for each locus are added to those already held in the
+        accumulator.  Otherwise, we move on to the next interval.
+
+        :param timestep:
+        :param countmap:
+        :return:
+        """
+
+        for interval, tuple in self.interval_tuple_map.items():
+            if self._is_within_tuple(tuple,timestep):
+                # iterate over the loci in countmap, create a counter from the map from each locus, add that counter to the
+                # main counter.  We use the addition operator because both objects are Counters, which will add the
+                # counts from temp_counter to that held in the cache.
+
+                for locus in countmap.keys():
+                    counts = countmap[locus]
+                    #log.debug("interval: %s before timestep %s: %s", timestep, self.counts_by_interval_by_locus[interval][locus])
+                    self.counts_by_interval_by_locus[interval][locus].update(counts)
+                    #log.debug("interval: %s  counts after timestep %s: %s", interval, timestep, self.counts_by_interval_by_locus[interval][locus])
+
+            else:
+                #log.debug("timestep %s not within interval %s", timestep, interval)
+                continue
+
+
+    def get_counts_for_interval_generations(self, gen):
+        """
+        Returns the count map for a given interval, where the interval is specified in generations.  This argument
+        is turned into ticks for a Moran model, and the appropriate map of counts (by locus) is returned.
+
+        A deep copy of the original countmap is returned, so that the caller does not accidentally modify an ongoing
+        cumulative counting operation.
+
+        :param gen:
+        :return: dict of loci with Counter() instances mapping traits to counts
+        """
+        interval_by_tick = self.int_gen_to_tick[gen]
+        countmap = self.counts_by_interval_by_locus[interval_by_tick]
+        return deepcopy(countmap)
+
+
+    def get_counts_all_intervals(self):
+        return deepcopy(self.counts_by_interval_by_locus)
