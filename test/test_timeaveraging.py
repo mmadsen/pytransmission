@@ -26,7 +26,7 @@ class MoranTimeAveragingTest(unittest.TestCase):
         intervals = [10,50,100]
         # expected given in ticks from 100K
         expected = [(99000, 100000), (95000, 100000), (90000, 100000)]
-        tatrack = agg.MoranTimeAverager(100000,intervals,popsize,numloci,ending_interval=False)
+        tatrack = agg.MoranCumulativeTimeAverager(100000,intervals,popsize,numloci,ending_interval=False)
         obs = tatrack.get_interval_tuples()
         self.assertEqual(expected,obs)
 
@@ -39,7 +39,7 @@ class MoranTimeAveragingTest(unittest.TestCase):
         intervals = [10,50,100]
         # expected given in ticks from 100K
         expected = [(100000, 101000), (100000, 105000), (100000, 110000)]
-        tatrack = agg.MoranTimeAverager(100000,intervals,popsize,numloci,ending_interval=True)
+        tatrack = agg.MoranCumulativeTimeAverager(100000,intervals,popsize,numloci,ending_interval=True)
         obs = tatrack.get_interval_tuples()
         self.assertEqual(expected,obs)
 
@@ -49,7 +49,7 @@ class MoranTimeAveragingTest(unittest.TestCase):
         popsize = 100
         numloci = 2
         intervals = [10,50,100]
-        tatrack = agg.MoranTimeAverager(100000,intervals,popsize,numloci,ending_interval=True)
+        tatrack = agg.MoranCumulativeTimeAverager(100000,intervals,popsize,numloci,ending_interval=True)
 
         # this should return true
         timestep = 103501
@@ -61,25 +61,28 @@ class MoranTimeAveragingTest(unittest.TestCase):
 
 
     def test_add_counts_onelocus(self):
-        log.info("test_add_counts_onelocus - adding two sets of counts.  The first set fits in both intervals, the second only in the second interval")
+        log.info("test_add_counts_onelocus - adding two sets of counts.")
         popsize = 100
         numloci = 1
         intervals = [10,50]
-        tatrack = agg.MoranTimeAverager(10000,intervals,popsize,numloci,ending_interval=True)
+        tatrack = agg.MoranCumulativeTimeAverager(10000,intervals,popsize,numloci,ending_interval=True)
 
+        log.info("adding first set of counts to both intervals")
         timestep = 10025
         countmap = dict()
         counts = {1001: 5, 1002: 15, 1009: 9, 1011: 1}
         countmap[0] = counts
 
-        tatrack.record_trait_count_sample(timestep, countmap)
+        tatrack.record_trait_count_sample(timestep, countmap, counts)
 
+        log.info("adding second set of counts only to one of the intervals")
         timestep = 11005
         countmap = dict()
         counts = {1001: 5, 1002: 15, 1009: 9, 1011: 1}
         countmap[0] = counts
 
-        tatrack.record_trait_count_sample(timestep, countmap)
+        tatrack.record_trait_count_sample(timestep, countmap, counts)
+
 
         countmap_10 = tatrack.get_counts_for_interval_generations(10)
         countmap_50 = tatrack.get_counts_for_interval_generations(50)
@@ -94,6 +97,10 @@ class MoranTimeAveragingTest(unittest.TestCase):
         self.assertEqual(count_50_1002, 30)
         self.assertEqual(count_10_1002, 15)
 
+        counts_by_gen = tatrack.get_counts_for_generation_intervals()
+        configs_by_gen = tatrack.get_configuration_counts_for_generation_intervals()
+        log.debug("counts_by_gen: %s", counts_by_gen)
+        log.debug("configurations_by_gen: %s", configs_by_gen)
 
 
 

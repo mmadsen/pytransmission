@@ -13,7 +13,7 @@ from collections import defaultdict, Counter
 from copy import deepcopy
 
 
-class MoranTimeAverager(object):
+class MoranCumulativeTimeAverager(object):
     """
     Tracks one set of time averaged trait counts, over a set of intervals.  Given a Moran model,
     the intervals are given in "generations" -- number of cycles through N individuals.  The class
@@ -49,14 +49,17 @@ class MoranTimeAverager(object):
         self.latest_tick = 0
         self.interval_tuple_map = dict()
         self.counts_by_interval_by_locus = dict()
+        self.configurations_by_interval = dict()
         #log.debug("map intervals: %s", self.int_tick_to_gen)
 
         # initialize the count maps.  We use the Counter class because we can update an entire locus of counts
         # with one addition operation.  Otherwise, the intervals and loci are dicts
         for interval in self.intervals_by_tick:
             self.counts_by_interval_by_locus[interval] = defaultdict(Counter)
+            self.configurations_by_interval[interval] = Counter()
             for locus in range(0,numloci):
                 self.counts_by_interval_by_locus[interval][locus] = Counter()
+
 
         #log.debug("initialized count map: %s", self.counts_by_interval_by_locus)
 
@@ -113,9 +116,10 @@ class MoranTimeAverager(object):
 
 
 
-    def record_trait_count_sample(self,timestep,countmap):
+    def record_trait_count_sample(self,timestep,countmap,configuration_map):
         """
-        Given a time step, and a map of trait counts by locus, we iterate over the
+        Given a time step, a map of trait counts by locus, and a map of counts for the cartesian product of loci (configurations),
+         we iterate over the
         intervals for which we're accumulating samples.  If the timestep fits within a given
         time interval, the counts for each locus are added to those already held in the
         accumulator.  Otherwise, we move on to the next interval.
@@ -136,6 +140,11 @@ class MoranTimeAverager(object):
                     #log.debug("interval: %s before timestep %s: %s", timestep, self.counts_by_interval_by_locus[interval][locus])
                     self.counts_by_interval_by_locus[interval][locus].update(counts)
                     #log.debug("interval: %s  counts after timestep %s: %s", interval, timestep, self.counts_by_interval_by_locus[interval][locus])
+
+                # configuration_map has the right structure to let Counter do the work
+                self.configurations_by_interval[interval].update(configuration_map)
+
+                #log.debug("configurations for interval %s: %s", interval, self.configurations_by_interval[interval])
 
             else:
                 #log.debug("timestep %s not within interval %s", timestep, interval)
@@ -160,3 +169,31 @@ class MoranTimeAverager(object):
 
     def get_counts_all_intervals(self):
         return deepcopy(self.counts_by_interval_by_locus)
+
+
+    def get_counts_for_generation_intervals(self):
+        """
+        Calling code usually specifies the time averaging duration in "generations", and in moran
+        dynamics this is turned into ticks internally.  For recording results, we recreate the
+        count map using generations rather than ticks as keys.
+
+        :return: dict of durations (in generations), each pointing to a dict of loci with Counter instances mapping traits to counts.
+        """
+        countmap_gens = dict()
+        for interval, map in self.counts_by_interval_by_locus.items():
+            gens = self.int_tick_to_gen[interval]
+            countmap_gens[gens] = map
+        return countmap_gens
+
+
+    def get_configuration_counts_for_generation_intervals(self):
+        """
+        Return the configuration counts with generation-scale intervals instead of ticks, using the same
+        method as get_counts_for_generation_intervals()
+        :return: dict of durations (in generations), each pointing to a dict with configuraiton as key, and count as value
+        """
+        countmap_gens = dict()
+        for interval, counter in self.configurations_by_interval.items():
+            gens = self.int_tick_to_gen[interval]
+            countmap_gens[gens] = dict(counter)
+        return countmap_gens
