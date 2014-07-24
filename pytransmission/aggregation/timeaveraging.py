@@ -112,7 +112,7 @@ class MoranCumulativeTimeAverager(object):
 
 
     def _is_within_tuple(self,tup,timestep):
-        return tup[0] <= timestep <= tup[1]
+        return tup[0] <= timestep < tup[1]
 
 
 
