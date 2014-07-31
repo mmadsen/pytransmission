@@ -173,6 +173,8 @@ class MoranCumulativeTimeAverager(object):
 
     def get_counts_for_generation_intervals(self):
         """
+        Returns trait counts by locus, for each locus, for time intervals measured in generations.
+
         Calling code usually specifies the time averaging duration in "generations", and in moran
         dynamics this is turned into ticks internally.  For recording results, we recreate the
         count map using generations rather than ticks as keys.
@@ -190,10 +192,27 @@ class MoranCumulativeTimeAverager(object):
         """
         Return the configuration counts with generation-scale intervals instead of ticks, using the same
         method as get_counts_for_generation_intervals()
-        :return: dict of durations (in generations), each pointing to a dict with configuraiton as key, and count as value
+
+        :return: dict of durations (in generations), each pointing to a dict with configuration as key, and count as value
         """
         countmap_gens = dict()
         for interval, counter in self.configurations_by_interval.items():
             gens = self.int_tick_to_gen[interval]
             countmap_gens[gens] = dict(counter)
         return countmap_gens
+
+
+    def get_counts_for_generation_for_ssize_for_intervals(self, ssize_list):
+        """
+        Returns trait counts by locus, for each time interval in generations, for each sample size requested.
+        The output is nested by interval, locus, ssize, then trait:count
+
+        :param ssize_list:
+        :return: nested dicts giving trait counts by interval, locus, and sample size
+        """
+        pass
+
+    def get_configurations_for_generation_for_ssize_for_intervals(self, ssize_list):
+        pass
+
+
