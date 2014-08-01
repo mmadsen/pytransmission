@@ -9,6 +9,7 @@ Utility methods for sampling various objects, which is frequently done by simula
 """
 
 import random
+import numpy.random as npr
 from collections import Counter
 import logging as log
 
@@ -31,7 +32,7 @@ def get_sampled_counter(ssize_list, counter):
     #log.debug("original Counter: %s", counter)
     for ssize in ssize_list:
         if ssize > total:
-            raise Warning("sample size requested: %s is larger than population: %s" % (ssize, total))
+            raise ValueError("sample size requested: %s is larger than population: %s" % (ssize, total))
         sample = random.sample(items, ssize)
         new_counter = Counter()
         new_counter.update(sample)
@@ -39,6 +40,40 @@ def get_sampled_counter(ssize_list, counter):
         result[ssize] = new_counter
 
     return result
+
+
+def get_sampled_dict_counts(ssize_list, dcounts):
+    """
+    Often, we use a dict to keep counts of categories, classes, traits.  Given a dict where
+    objects to count are keys, and counts are values, take samples from the dict with sizes
+    given in the ssize_list, and return a new dict with the requested ssize as key, and a dict with
+    object:count_in_sample as value.
+
+    :param ssize_list:
+    :param dcounts:
+    :return: dict with { ssize: { object: count }} for all ssize in ssize_list
+    """
+    result = dict()
+    total = sum(dcounts.values())
+    for ssize in ssize_list:
+        if ssize > total:
+            raise ValueError("sample size requested: %s is larger than the population: %s" % (ssize, total))
+
+        traits = []
+        prob = []
+        for trait, count in dcounts.items():
+            traits.append(trait)
+            prob.append(float(count) / float(total))
+
+        sampled_counts = npr.multinomial(ssize,prob,size=1)
+        count_list = sampled_counts.tolist()
+        #log.debug("traits: %s total: %s prob: %s counts: %s", traits, total, prob, count_list)
+        sampled_dict = dict(zip(traits, count_list[0]))
+        result[ssize] = sampled_dict
+
+    #log.debug("result from sampled dict: %s", result)
+    return result
+
 
 
 

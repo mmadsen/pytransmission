@@ -55,7 +55,7 @@ class SamplingTest(unittest.TestCase):
             try:
                 sampled = utils.get_sampled_counter(sample_sizes, test_counter)
                 log.debug("results of sampling: %s", sampled)
-            except Warning as w:
+            except ValueError as w:
                 log.debug("exception sample size: %s", w)
                 success = True
 
@@ -63,7 +63,25 @@ class SamplingTest(unittest.TestCase):
         self.assertTrue(success)
 
 
+    def test_dict_count_sampling(self):
+        log.info("entering test_dict_count_sampling")
+        success = False
+        test_dict = dict()
+        test_dict['trait1'] = 200
+        test_dict['trait2'] = 200
+        test_dict['trait3'] = 400
+        sample_sizes = [20, 100]
 
+        for i in xrange(0,10):
+            try:
+                sampled = utils.get_sampled_dict_counts(sample_sizes, test_dict)
+                log.debug("results: %s", sampled)
+                success = True
+            except ValueError as w:
+                log.debug("exception sample size: %s", w)
+                success = False
+
+        self.assertTrue(success)
 
 
 if __name__ == "__main__":

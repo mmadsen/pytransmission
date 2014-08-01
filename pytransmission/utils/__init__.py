@@ -7,4 +7,4 @@
 Description here
 
 """
-from sampling import get_sampled_counter
+from sampling import get_sampled_counter, get_sampled_dict_counts
