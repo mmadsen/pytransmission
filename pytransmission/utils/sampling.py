@@ -62,12 +62,13 @@ def get_sampled_dict_counts(ssize_list, dcounts):
         traits = []
         prob = []
         for trait, count in dcounts.items():
-            traits.append(trait)
-            prob.append(float(count) / float(total))
+            if count > 0:
+                traits.append(trait)
+                prob.append(float(count) / float(total))
 
         sampled_counts = npr.multinomial(ssize,prob,size=1)
         count_list = sampled_counts.tolist()
-        #log.debug("traits: %s total: %s prob: %s counts: %s", traits, total, prob, count_list)
+        log.debug("traits: %s total: %s prob: %s counts: %s", traits, total, prob, count_list)
         sampled_dict = dict(zip(traits, count_list[0]))
         result[ssize] = sampled_dict
 
