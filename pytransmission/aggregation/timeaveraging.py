@@ -198,7 +198,8 @@ class MoranCumulativeTimeAverager(object):
         countmap_gens = dict()
         for interval, counter in self.configurations_by_interval.items():
             gens = self.int_tick_to_gen[interval]
-            countmap_gens[gens] = dict(counter)
+            #countmap_gens[gens] = dict(counter)  # TODO only return non-zero items from the counter?
+            countmap_gens[gens] = {config: count for config, count in counter.items() if count > 0}
         return countmap_gens
 
 
