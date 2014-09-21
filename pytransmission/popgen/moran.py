@@ -61,8 +61,11 @@ def moran_mutation_rate_from_theta(popsize, theta):
     :param theta:
     :return:
     """
-    intermediate = float(theta) / ( 2.0 * float(popsize))
+    # intermediate = float(theta) / ( 2.0 * float(popsize))
+    #
+    # mutation = intermediate / (1.0 - intermediate)
 
-    mutation = intermediate / (1.0 - intermediate)
+    mutation = float(theta) / float(popsize)
+
     #log.debug("mutation rate from N: %s and theta: %s:  %s", popsize, theta, mutation)
     return mutation

@@ -12,3 +12,6 @@ from moran import moran_watkins_convergence_to_stationarity, moran_watkins_conve
     moran_watkins_multilocus_convergence_time_timesteps, moran_mutation_rate_from_theta
 
 from wright_fisher import wfia_convergence_to_stationarity_generations
+
+
+from crp import simulate_crp_memberships, get_crp_unlabeled_counts
