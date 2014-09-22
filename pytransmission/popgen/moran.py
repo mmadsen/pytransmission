@@ -49,7 +49,7 @@ def moran_watkins_multilocus_convergence_time_timesteps(popsize, num_loci, innov
 def moran_mutation_rate_from_theta(popsize, theta):
     """
     Given a value for theta (the population-level dimensionless innovation rate, returns the actual probability
-    of mutation per clock tick given Equation 3.98 from Ewens 2004.  This is a *per locus* innovation rate, however,
+    of mutation per locus per tick.  This is a *per locus* innovation rate, however,
     so if you are using this in code which randomly selects one of M loci to receive a mutation, then you should use
     M * mutation_rate to determine the actual probability of an event happening in a timestep.
 
@@ -69,3 +69,30 @@ def moran_mutation_rate_from_theta(popsize, theta):
 
     #log.debug("mutation rate from N: %s and theta: %s:  %s", popsize, theta, mutation)
     return mutation
+
+
+def moran_expected_traits_at_locus(theta, ssize):
+    """
+    Calculates the expectation and variance of the number of alleles in a sample of size n, given
+    equations 3.84 - 3.86 from Ewens 2004, with the difference that we are not modeling a diploid
+    population and thus we do not use 2N in place of N as described by Ewens.
+
+    :param theta:
+    :param ssize:
+    :return: tuple with expected value, variance
+    """
+
+    e_k = 0.0
+    for i in xrange(0, ssize - 1):
+        e_k += float(theta) / float(theta + i)
+    log.debug("expected K for theta: %s ssize: %s is %s", theta, ssize, e_k)
+
+    accum = 0.0
+    for j in xrange(1, ssize - 1):
+        accum += j / (theta + j) ** 2
+    v_k = theta * accum
+    log.debug("variance K for theta: %s ssize: %s is %s", theta, ssize, v_k)
+
+    return (e_k, v_k)
+
+

@@ -24,7 +24,7 @@ class MoranModelTest(unittest.TestCase):
         answer = 46.0517  # given by Mathematica 9
 
         res = m.moran_watkins_convergence_to_stationarity(pop, mutation)
-        log.debug("res: %s  answer: %s", res, answer)
+        log.debug("estimated convergence time: %s  answer: %s", res, answer)
         self.assertAlmostEqual(answer, res, None, None, 0.01)
 
 
@@ -38,6 +38,15 @@ class MoranModelTest(unittest.TestCase):
 
         self.assertTrue(True,"Not a full test, always passes")
 
+
+    def test_expected_k(self):
+        theta = [0.25, 0.5, 1.0, 2.0, 3.0, 10.0]
+        ssize = 50
+
+        for t in theta:
+            (e_k, v_k) = m.moran_expected_traits_at_locus(t, ssize)
+
+        self.assertTrue(True, "Not a full test, always passes")
 
 
 
