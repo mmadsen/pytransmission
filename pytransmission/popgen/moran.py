@@ -74,21 +74,23 @@ def moran_mutation_rate_from_theta(popsize, theta):
 def moran_expected_traits_at_locus(theta, ssize):
     """
     Calculates the expectation and variance of the number of alleles in a sample of size n, given
-    equations 3.84 - 3.86 from Ewens 2004, with the difference that we are not modeling a diploid
-    population and thus we do not use 2N in place of N as described by Ewens.
+    equations 3.84 - 3.86 from Ewens 2004, with the difference that we need a factor of 2n given the
+    Moran model.
 
     :param theta:
     :param ssize:
     :return: tuple with expected value, variance
     """
 
+    ssize_factor = ssize
+
     e_k = 0.0
-    for i in xrange(0, ssize - 1):
+    for i in xrange(0, ssize_factor - 1):
         e_k += float(theta) / float(theta + i)
     log.debug("expected K for theta: %s ssize: %s is %s", theta, ssize, e_k)
 
     accum = 0.0
-    for j in xrange(1, ssize - 1):
+    for j in xrange(1, ssize_factor - 1):
         accum += j / (theta + j) ** 2
     v_k = theta * accum
     log.debug("variance K for theta: %s ssize: %s is %s", theta, ssize, v_k)
