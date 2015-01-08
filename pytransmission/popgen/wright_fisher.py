@@ -13,6 +13,29 @@ import math
 import logging as log
 
 
+def wf_mutation_rate_from_theta(popsize, theta):
+    """
+    Given a value for theta (the population-level dimensionless innovation rate, returns the actual probability
+    of mutation per locus per tick.  This is a *per locus* innovation rate, however,
+    so if you are using this in code which randomly selects one of M loci to receive a mutation, then you should use
+    M * mutation_rate to determine the actual probability of an event happening in a timestep.
+
+    theta = 2 * popsize * mutation
+
+    mutation is thus (theta / 2N)
+
+    :param popsize:
+    :param theta:
+    :return:
+    """
+
+    mutation = float(theta) / float(popsize)
+
+    #log.debug("WF mutation rate from N: %s and theta: %s:  %s", popsize, theta, mutation)
+    return mutation
+
+
+
 def wfia_convergence_to_stationarity_generations(popsize,mutationrate):
     """Returns the expected time in generations for an infinite-alleles WF process to reach quasi-stationarity, as defined
         by Ewens (2004) for the "unlableled" WF-IA model.

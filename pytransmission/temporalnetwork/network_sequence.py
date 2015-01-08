@@ -30,13 +30,14 @@ class NetworkSequence(object):
     def __init__(self):
         self.time_to_matrix = {}
         self.times = []
+        self.time_to_graph = {}
 
 
 
 
     def add_network(self, time, matrix):
         """
-        Adds a network to the sequence
+        Adds a network snapshot (in the form of an adjacency matrix) to the sequence
         :param time:
         :param matrix:
         :return:
@@ -47,7 +48,7 @@ class NetworkSequence(object):
 
 
 
-    def get_graph_for_time(self, time):
+    def get_graph_matrix_for_time(self, time):
         """
         Returns networkx Graph object for the state of the temporal network at the specified time
         :param time:
@@ -69,7 +70,7 @@ class NetworkSequence(object):
 
         log.debug("snapshot time for index %s is: %s", time, index)
 
-        # TODO:  construct the graph from the matrix
+        return
 
 
     def get_new_vertices_for_time(self, time):
